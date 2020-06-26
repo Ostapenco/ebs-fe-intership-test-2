@@ -23,6 +23,12 @@ function Calculator() {
         '3',
         '+',
     ];
+    const symbols = [
+        '/',
+        '*',
+        '-',
+        '+',
+    ];
 
     // const setOperand = (value) => {
 
@@ -37,13 +43,27 @@ function Calculator() {
                 setData('');
                 break;
             case '+/-':
-                value < 0 ? setData(Math.abs(eval(value))) : setData(-Math.abs(eval(value)));
+                const oppositeValue = data < 0 ? Math.abs(eval(data)) : -Math.abs(eval(data));
+                setData(oppositeValue);
                 break;
             case '%':
-                setData(data / 10);
+                const usedSymbol = symbols.filter(element => data.indexOf(element) > 0);
+                if (usedSymbol) {
+                    const ind = data.indexOf(usedSymbol);
+                    const influenced = data.slice(ind + 1)
+                    const value1 = data.slice(0, ind);
+                    const value2 = value1 / 100 * influenced;
+                    const sym = data.slice(ind, ind + 1);
+                    const result = `${value1}${sym}${value2}`;
+                    setData(result);
+
+                } else {
+                    setData('');
+                }
                 break;
             case '=':
-                if (data != null) {
+                const lastClick = data[data.length - 1];
+                if (data != null && !symbols.find(item => item === lastClick)) {
                     const newData = eval(data);
                     setData(newData);
                 };
@@ -53,7 +73,22 @@ function Calculator() {
         }
     };
 
+    const handleOperandClick = (value) => {
+        if (data[0] === '0') {
+            setData(data.substr(1) + value);
+        } else {
+            setData(data + value);
+        }
+
+    }
+
+
+
     console.log('Calculator -> data', data);
+    console.log('Calculator -> data', data[data.length - 1]);
+    console.log('Calculator -> data', typeof (+data[data.length - 1]));
+
+
 
     const validateInput = (e) => {
         const ch = String.fromCharCode(e.which);
@@ -67,7 +102,7 @@ function Calculator() {
     return (
         <div className='calculatorContainer'>
             <input
-                type='text'
+                disabled type='text'
                 value={data}
                 onChange={validateInput}
                 placeholder='0'
@@ -88,7 +123,8 @@ function Calculator() {
                     <button
                         key={i}
                         value={btn}
-                        onClick={(e) => setData(data + e.target.value)}
+                        onClick={(e) =>
+                            handleOperandClick(e.target.value)}
                     >
                         {btn}
                     </button>
@@ -96,13 +132,13 @@ function Calculator() {
             </div>
 
             <div className='bottomLine'>
-                <button value='0' onClick={(e) => setData(data + e.target.value)}>
+                <button value='0' onClick={(e) => handleOperandClick(e.target.value)}>
                     0
         </button>
                 <button
                     value='.'
                     className='dotBtn'
-                    onClick={(e) => setData(data + e.target.value)}
+                    onClick={(e) => handleOperandClick(e.target.value)}
                 >
                     .
         </button>
