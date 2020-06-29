@@ -2,67 +2,104 @@
 import { symbols } from './variables';
 
 
+const isSymbolClick = (click) => symbols.find(item => item === click);
 
-export const handleBtnClick = (data, setData, resultValue, setResultValue, value) => {
-    const isSymbol = (click) => symbols.find(item => item === click);
-    const lastClick = data[data.length - 1];
-    const firstClick = data[0];
+const oppositeValue = (value) => value < 0 ? Math.abs(value) : -Math.abs(value);
 
-    switch (value) {
-        case 'AC':
-            setData('');
-            setResultValue('');
-            break;
-        case '+/-':
-            if (data && data != null && !isSymbol(lastClick)) {
-                const oppositeValue = data < 0 ? Math.abs(eval(data)) : -Math.abs(eval(data));
-                setData(oppositeValue);
+
+export const handleBtnClick = (value, data, setData, runCalculation) => {
+    const { number1, number2, hiddenNumber, grabNumber1, newCalculation } = data;
+
+    if (isSymbolClick(value)) {
+        if (!number1.length) {
+            setData({ ...data, number1: 0, number2: hiddenNumber, operator: value, grabNumber1: false });
+        } else if (newCalculation) {
+            setData({ ...data, number1: 0, number2: hiddenNumber, operator: value, grabNumber1: false, newCalculation: false });
+        } else {
+            setData({ ...data, number2: hiddenNumber, operator: value, grabNumber1: false });
+        }
+
+        number2.length && runCalculation();
+
+    } else if (newCalculation && value !== '.') {
+        setData({ ...data, number1: value, hiddenNumber: value, grabNumber1: true, newCalculation: false });
+    } else if (grabNumber1) {
+
+        if (value === '.') {
+
+            if (newCalculation) {
+                setData({ ...data, number1: '0' + value, hiddenNumber: '0' + value, newCalculation: false });
+            } else if (number1 === '' || number1 === 0) {
+                setData({ ...data, number1: '0' + value, hiddenNumber: '0' + value });
+            } else if (number1.toString().indexOf('.') > -1) {
+                return;
+            } else {
+                setData({ ...data, number1: number1 + value, hiddenNumber: number1 + value });
             }
-            break;
-        case '%':
-            const stringData = data.toString();
-            const usedSymbol = symbols.filter(element => stringData.indexOf(element) > 0);
+        } else {
 
-            if (usedSymbol && data && data != null) {
-                const ind = stringData.indexOf(usedSymbol);
-                const sym = stringData.slice(ind, ind + 1);
+            if (number1[0] === '0' && number1[1] !== '.') {
+                setData({ ...data, number1: number1.substr(1) + value, hiddenNumber: number1.substr(1) + value });
+            } else {
+                setData({ ...data, number1: number1 + value, hiddenNumber: number1 + value });
+            }
+        }
+    } else {
 
-                if (symbols.find(item => item === sym)) {
-                    const influenced = stringData.slice(ind + 1);
-                    const value1 = stringData.slice(0, ind);
-                    const value2 = value1 / 100 * influenced;
-                    const result = `${value1}${sym}${value2}`;
-                    setData(result);
-                } else {
-                    setData('');
-                }
+        if (hiddenNumber.length) {
+            setData({ ...data, number2: value, hiddenNumber: '' });
+        } else if (value === '.') {
+
+            if (number2 === '' || number2 === 0) {
+                setData({ ...data, number2: '0' + value });
+            } else if (number2.toString().indexOf('.') > -1) {
+                return;
+            } else {
+                setData({ ...data, number2: number2 + value });
             }
-            break;
-        case '=':
-            let newData;
-            if (data != null && !isSymbol(lastClick)) {
-                newData = eval(data);
-                setData(newData);
-                setResultValue(newData ? newData : '');
-            } else if (resultValue && !isSymbol(firstClick)) {
-                newData = eval(...resultValue, data);
-                setData(newData);
-                setResultValue(newData);
+        } else {
+
+            if (number2[0] === '0' && number2[1] !== '.') {
+                setData({ ...data, number2: number2.substr(1) + value });
+            } else {
+                setData({ ...data, number2: number2 + value });
             }
-            ;
-            break;
-        default:
-            setData('');
+        }
     }
 };
 
+export const handleFirst3Btn = (value, data, setData) => {
+    const { number1, number2, grabNumber1, newCalculation } = data;
 
-export const handleOperandClick = (data, setData, value) => {
-    if (!data) {
-        setData(value);
-    } else if (data[0] === '0') {
-        setData(data.substr(1) + value);
-    } else {
-        setData(data + value);
+
+    switch (value) {
+        case 'AC':
+            setData({
+                number1: '',
+                number2: '',
+                hiddenNumber: '',
+                operator: '',
+                grabNumber1: true,
+                newCalculation: true
+            });
+            break;
+        case '+/-':
+
+            if (number2.toString().length && !grabNumber1) {
+                setData({ ...data, number2: oppositeValue(number2) });
+            } else {
+                setData({ ...data, number1: oppositeValue(number1) });
+            }
+            break;
+        case '%':
+
+            if (grabNumber1 || newCalculation || !number2.toString().length) {
+                setData({ ...data, number1: 0, hiddenNumber: 0 });
+            } else {
+                setData({ ...data, number2: number1 / 100 * number2 });
+            }
+            break;
+        default:
+            return;
     }
 };
