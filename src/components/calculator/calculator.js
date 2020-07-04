@@ -1,75 +1,64 @@
 import React, { useState } from 'react';
 
 import './calculator.css';
+import { first3Buttons, operandButtons } from '../../utils/variables';
+import { handleBtnClick, handleFirst3Btn } from '../../utils/functions';
 
 function Calculator() {
-    const [inputValue, setInputValue] = useState();
-    const [data, setData] = useState('');
-    // const [secondOperand, setSecondOperand] = useState();
+    const [data, setData] = useState({
+        number1: '',
+        number2: '',
+        hiddenNumber: '',
+        operator: '',
+        grabNumber1: true,
+        newCalculation: true,
+    });
 
-    const first3Buttons = ['AC', '+/-', '%'];
-    const operandButtons = [
-        '/',
-        '7',
-        '8',
-        '9',
-        '*',
-        '4',
-        '5',
-        '6',
-        '-',
-        '1',
-        '2',
-        '3',
-        '+',
-    ];
+    const { number1, number2, operator, grabNumber1, newCalculation } = data;
 
-    // const setOperand = (value) => {
 
-    //     firstOperand == null ? setFirstOperand(value) : setSecondOperand(value);
-    //     console.log("setOperand -> value", value)
-    // }
+    const runCalculation = () => {
 
-    const handleBtnClick = (value) => {
-        // eslint-disable-next-line default-case
-        switch (value) {
-            case 'AC':
-                setData('');
+        switch (operator) {
+            case '/':
+                setData({ ...data, number1: number1 / number2, grabNumber1: true, newCalculation: true });
                 break;
-            case '+/-':
-                value < 0 ? setData(Math.abs(eval(value))) : setData(-Math.abs(eval(value)));
+            case '*':
+                setData({ ...data, number1: number1 * number2, grabNumber1: true, newCalculation: true });
                 break;
-            case '%':
-                setData(data / 10);
+            case '-':
+                setData({ ...data, number1: number1 - number2, grabNumber1: true, newCalculation: true });
                 break;
-            case '=':
-                if (data != null) {
-                    const newData = eval(data);
-                    setData(newData);
-                };
+            case '+':
+                setData({ ...data, number1: Number(number1) + Number(number2), grabNumber1: true, newCalculation: true });
                 break;
             default:
-                setData('');
+                return;
         }
     };
 
-    console.log('Calculator -> data', data);
+    const proceedOperation = () => {
 
-    const validateInput = (e) => {
-        const ch = String.fromCharCode(e.which);
+        if (!operator.length) {
+            return;
+        }
+        runCalculation();
+    };
 
-        if (!/[0-9]/.test(ch)) {
-            e.preventDefault();
-            setInputValue(e.target.value);
+    const showNumber = () => {
+
+        if (grabNumber1 || newCalculation || !number2.toString().length) {
+            return number1;
+        } else {
+            return number2;
         }
     };
 
     return (
         <div className='calculatorContainer'>
             <input
-                type='text'
-                value={data}
-                onChange={validateInput}
+                disabled type='text'
+                value={showNumber()}
                 placeholder='0'
                 className='calculatorScreen'
             ></input>
@@ -78,7 +67,7 @@ function Calculator() {
                     <button
                         key={i}
                         value={btn}
-                        onClick={(e) => handleBtnClick(e.target.value)}
+                        onClick={(e) => handleFirst3Btn(e.target.value, data, setData)}
                     >
                         {btn}
                     </button>
@@ -88,7 +77,7 @@ function Calculator() {
                     <button
                         key={i}
                         value={btn}
-                        onClick={(e) => setData(data + e.target.value)}
+                        onClick={(e) => handleBtnClick(e.target.value, data, setData, runCalculation)}
                     >
                         {btn}
                     </button>
@@ -96,26 +85,28 @@ function Calculator() {
             </div>
 
             <div className='bottomLine'>
-                <button value='0' onClick={(e) => setData(data + e.target.value)}>
+                <button value='0'
+                    onClick={(e) => handleBtnClick(e.target.value, data, setData, runCalculation)}
+                >
                     0
         </button>
                 <button
                     value='.'
                     className='dotBtn'
-                    onClick={(e) => setData(data + e.target.value)}
+                    onClick={(e) => handleBtnClick(e.target.value, data, setData, runCalculation)}
                 >
                     .
         </button>
                 <button
                     value='='
                     className='equalToBtn'
-                    onClick={(e) => handleBtnClick(e.target.value)}
+                    onClick={proceedOperation}
                 >
                     =
         </button>
             </div>
-        </div>
+        </div >
     );
-}
+};
 
 export default Calculator;
